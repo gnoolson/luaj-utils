@@ -1,6 +1,7 @@
 # Luaj Utilities
 
-**Maven**  
+**Maven**
+
 ```xml
     <repositories>
         <repository>
@@ -13,7 +14,7 @@
         <dependency>
             <groupId>com.github.gnoolson</groupId>
             <artifactId>luaj-utils</artifactId>
-            <version>2.0.1</version>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 ```

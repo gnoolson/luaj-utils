@@ -10,7 +10,7 @@ import org.luaj.vm2.LuaValue;
 class LuaTableUtilsTest {
 
     @Test
-    public void merge(){
+    public void merge() {
         LuaTable source = new LuaTable();
         source.set("key_1", LuaString.valueOf("value_1"));
         source.set("key_2", LuaString.valueOf("value_2"));
@@ -27,20 +27,20 @@ class LuaTableUtilsTest {
 
 
         Assertions.assertAll("match",
-                ()->{
+                () -> {
                     Assertions.assertEquals(expected.get("key_1").checkjstring(), dist.get("key_1").checkjstring());
                 },
-                ()->{
+                () -> {
                     Assertions.assertEquals(expected.get("key_2").checkjstring(), dist.get("key_2").checkjstring());
                 },
-                ()->{
+                () -> {
                     Assertions.assertEquals(expected.get("key_3").checkjstring(), dist.get("key_3").checkjstring());
                 }
         );
     }
 
     @Test
-    public void clear(){
+    public void clear() {
 
         LuaTable table = new LuaTable();
         table.set("key_1", LuaString.valueOf("value_1"));
@@ -50,13 +50,13 @@ class LuaTableUtilsTest {
         LuaTableUtils.clear(table);
 
         Assertions.assertAll("not found",
-                ()->{
+                () -> {
                     Assertions.assertEquals(LuaValue.NIL, table.get("key_1"));
                 },
-                ()->{
+                () -> {
                     Assertions.assertEquals(LuaValue.NIL, table.get("key_2"));
                 },
-                ()->{
+                () -> {
                     Assertions.assertEquals(LuaValue.NIL, table.get("key_3"));
                 }
         );

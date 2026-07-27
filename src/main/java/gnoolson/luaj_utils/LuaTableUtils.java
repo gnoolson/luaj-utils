@@ -8,7 +8,7 @@ import org.luaj.vm2.Varargs;
 public class LuaTableUtils {
 
     // +
-    public static void merge(LuaTable source, LuaTable dist){
+    public static void merge(LuaTable source, LuaTable dist) {
         for (LuaValue key : source.keys()) {
             dist.set(key, source.get(key));
         }
@@ -64,9 +64,9 @@ public class LuaTableUtils {
     }
 
     /*
-    *
-    *
-    * */
+     *
+     *
+     * */
     private static boolean valueEquals(LuaValue luaValue1, LuaValue luaValue2) {
         if (luaValue1 == null)
             luaValue1 = LuaValue.NIL;

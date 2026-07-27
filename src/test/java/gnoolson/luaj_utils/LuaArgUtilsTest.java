@@ -276,7 +276,7 @@ class LuaArgUtilsTest {
                 add("str_2");
                 add("str_3");
             }};
-            sourceTable.set("field1", LuaTypeConverter.toLuaValue(data));
+            sourceTable.set("field1", LuaTypeConverter.toLua(data));
 
             Object actualValue = LuaArgUtils.getObjectFromLuaTable(sourceTable, "sourceTable", "field1");
             Assertions.assertEquals(data, actualValue);
@@ -454,7 +454,7 @@ class LuaArgUtilsTest {
                 add("str_2");
                 add("str_3");
             }};
-            LuaValue arg = LuaTypeConverter.toLuaValue(data);
+            LuaValue arg = LuaTypeConverter.toLua(data);
 
             Object actualResult = LuaArgUtils.getObjectFromFunctionArgs(arg, 1, "obj1");
             Assertions.assertEquals(data, actualResult);
@@ -650,7 +650,7 @@ class LuaArgUtilsTest {
                 add("str_2");
                 add("str_3");
             }};
-            LuaValue arg = LuaTypeConverter.toLuaValue(data);
+            LuaValue arg = LuaTypeConverter.toLua(data);
 
             Object actualResult = LuaArgUtils.getObjectFromLuaValue(arg, "obj1");
             Assertions.assertEquals(data, actualResult);

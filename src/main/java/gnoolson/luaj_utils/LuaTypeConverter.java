@@ -1,164 +1,237 @@
 package gnoolson.luaj_utils;
 
 import com.alibaba.fastjson.JSON;
-import org.luaj.vm2.LuaInteger;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 public class LuaTypeConverter {
 
-    // +
-    public static boolean isArray(LuaTable table) {
-        int len = table.length();
-        LuaValue k = LuaValue.NIL;
+    public static Object toObject(LuaValue value) {
+        if (value == null || value.isnil())
+            return null;
+
+        if (value.isboolean())
+            return value.toboolean();
+
+        if (value.isint())
+            return value.toint();
+
+        if (value.islong())
+            return value.tolong();
+
+        if (value.isnumber())
+            return value.todouble();
+
+        if (value.isstring())
+            return value.tojstring();
+
+        if (value.istable())
+            return tableToJava(value.checktable());
+
+        if (value.isuserdata())
+            return value.touserdata();
+
+        return value;
+    }
+
+    public static LuaValue toLua(Object object) {
+        if (object == null)
+            return LuaValue.NIL;
+
+        if (object instanceof LuaValue)
+            return (LuaValue) object;
+
+        if (object instanceof Boolean)
+            return LuaValue.valueOf((Boolean) object);
+
+        if (object instanceof Byte)
+            return LuaValue.valueOf(((Byte) object).intValue());
+
+        if (object instanceof Short)
+            return LuaValue.valueOf(((Short) object).intValue());
+
+        if (object instanceof Integer)
+            return LuaValue.valueOf((Integer) object);
+
+        if (object instanceof Long)
+            return LuaValue.valueOf((Long) object);
+
+        if (object instanceof Float)
+            return LuaValue.valueOf(((Float) object).doubleValue());
+
+        if (object instanceof Double)
+            return LuaValue.valueOf((Double) object);
+
+        if (object instanceof BigInteger)
+            return LuaValue.valueOf(((BigInteger) object).longValue());
+
+        if (object instanceof BigDecimal)
+            return LuaValue.valueOf(((BigDecimal) object).doubleValue());
+
+        if (object instanceof Character)
+            return LuaValue.valueOf(object.toString());
+
+        if (object instanceof String)
+            return LuaValue.valueOf((String) object);
+
+        if (object instanceof byte[])
+            return LuaValue.valueOf((byte[]) object);
+
+        if (object instanceof Enum<?>)
+            return LuaValue.valueOf(((Enum<?>) object).name());
+
+        if (object instanceof Map<?, ?>)
+            return mapToLua((Map<?, ?>) object);
+
+        if (object instanceof Collection<?>)
+            return collectionToLua((Collection<?>) object);
+
+        if (object.getClass().isArray())
+            return arrayToLua(object);
+
+        Object json = JSON.toJSON(object);
+
+        if (json instanceof JSONObject)
+            return mapToLua((JSONObject) json);
+
+        if (json instanceof JSONArray)
+            return collectionToLua((JSONArray) json);
+
+        return LuaValue.userdataOf(object);
+    }
+
+    /*
+     *
+     *
+     * */
+    private static Object tableToJava(LuaTable luaTable) {
+        if (isArray(luaTable))
+            return tableToList(luaTable);
+
+        return tableToMap(luaTable);
+    }
+
+    private static List<Object> tableToList(LuaTable luaTable) {
+        List<Object> list = new ArrayList<>();
+        int n = luaTable.length();
+
+        for (int i = 1; i <= n; i++)
+            list.add(toObject(luaTable.get(i)));
+
+        return list;
+    }
+
+    private static Map<String, Object> tableToMap(LuaTable table) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        LuaValue key = LuaValue.NIL;
 
         while (true) {
-            Varargs n = table.next(k);
-            if ((k = n.arg1()).isnil())
+            Varargs next = table.next(key);
+            key = next.arg1();
+            if (key.isnil())
                 break;
 
-            if (k.isinttype()) {
-                int idx = k.toint();
-                if (idx < 1 || idx > len)
-                    return false;
+            LuaValue value = next.arg(2);
+            map.put(key.tojstring(), toObject(value));
+        }
 
-            } else {
+        return map;
+    }
+
+    private static boolean isArray(LuaTable luaTable) {
+        int len = luaTable.length();
+        int count = 0;
+        LuaValue key = LuaValue.NIL;
+
+        while (true) {
+            Varargs next = luaTable.next(key);
+            key = next.arg1();
+
+            if (key.isnil())
+                break;
+
+            if (!key.isint())
                 return false;
-            }
+
+            int index = key.toint();
+
+            if (index < 1 || index > len)
+                return false;
+
+            count++;
         }
 
-        return true;
+        return count == len;
     }
 
-    // +
-    public static Object toObject(LuaValue value) {
-        Object result = null;
+    private static LuaTable mapToLua(Map<?, ?> map) {
+        LuaTable luaTable = new LuaTable();
 
-        if (value.istable()) {
-            LuaTable table = (LuaTable) value;
-
-            boolean isArray = isArray(table);
-
-            if (isArray) {
-                List<Object> arr = new ArrayList<>();
-                int len = table.length();
-
-                for (int i = 1; i <= len; i++) {
-                    arr.add(toObject(table.get(i)));
-                }
-
-                return arr;
-            } else {
-                Map<String, Object> obj = new HashMap<>();
-                LuaValue k = LuaValue.NIL;
-
-                while (true) {
-                    Varargs n = table.next(k);
-                    if ((k = n.arg1()).isnil()) break;
-                    LuaValue v = n.arg(2);
-                    obj.put(k.tojstring(), toObject(v));
-                }
-
-                return obj;
-            }
-
-        } else if (value.isint()) {
-            result = value.toint();
-        } else if (value.islong()) {
-            result = value.tolong();
-        } else if (value.isnumber()) {
-            result = value.todouble();
-        } else if (value.isboolean()) {
-            result = value.toboolean();
-        } else if (value.isstring()) {
-            result = value.tojstring();
-        } else if (value.isnil()) {
-            result = null;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            LuaValue key = toLuaKey(entry.getKey());
+            luaTable.set(key, toLua(entry.getValue()));
         }
 
-        return result;
+        return luaTable;
     }
 
-    // +
-    public static LuaTable toLuaTable(Map<String, Object> data) {
-        LuaTable table = new LuaTable();
-
-        for (String key : data.keySet()) {
-            table.set(key, toLuaValue(data.get(key)));
-        }
-
-        return table;
-    }
-
-    // +
-    public static LuaTable toLuaTable(Collection<Object> arr) {
-        LuaTable table = new LuaTable();
-
+    private static LuaTable collectionToLua(Collection<?> collection) {
+        LuaTable luaTable = new LuaTable();
         int index = 1;
-        for (Object o : arr) {
-            table.set(index, toLuaValue(o));
-            index++;
-        }
 
-        return table;
+        for (Object object : collection)
+            luaTable.set(index++, toLua(object));
+
+        return luaTable;
     }
 
-    // +
-    public static LuaValue toLuaTable(Object[] objects) {
-        return toLuaTable(Arrays.asList(objects));
+    private static LuaTable arrayToLua(Object array) {
+        LuaTable luaTable = new LuaTable();
+        int length = Array.getLength(array);
+
+        for (int i = 0; i < length; i++)
+            luaTable.set(i + 1, toLua(Array.get(array, i)));
+
+        return luaTable;
     }
 
-    // +
-    public static LuaValue toLuaValue(Object value) {
-        if (value == null) { // +
-            return LuaValue.NIL;
-        } else if (value instanceof Boolean) { // +
-            return LuaValue.valueOf((Boolean) value);
-        } else if (value instanceof Integer) { // +
-            return LuaInteger.valueOf((Integer) value);
-        } else if (value instanceof Number) { // +
-            return LuaValue.valueOf(((Number) value).doubleValue());
-        } else if (value instanceof String) { // +
-            return LuaValue.valueOf((String) value);
-        } else if (value instanceof Map) { // +
-            return toLuaTable((Map) value);
-        } else if (value instanceof Collection) { // +
-            return toLuaTable((Collection) value);
-        } else { // +
-            return LuaInteger.valueOf(value.toString());
-        }
-    }
+    private static LuaValue toLuaKey(Object key) {
+        if (key == null)
+            throw new IllegalArgumentException("Map key cannot be null");
 
-    // +-
-    public static Map<String, Object> toMap(LuaTable table) {
-        LuaValue[] keys = table.keys();
-        Map<String, Object> data = new HashMap<>();
+        if (key instanceof String)
+            return LuaValue.valueOf((String) key);
 
-        for (int i = 0; i < keys.length; i++) {
-            LuaValue key = keys[i];
-            LuaValue luaValue = table.get(key);
+        if (key instanceof Integer)
+            return LuaValue.valueOf((Integer) key);
 
-            if (luaValue.istable()) {
-                data.put(key.toString(), toObject(luaValue));
-            } else if (luaValue.isboolean()) {
-                data.put(key.toString(), luaValue.checkboolean());
-            } else if (luaValue.isint()) {
-                data.put(key.toString(), luaValue.checkint());
-            } else if (luaValue.islong()) {
-                data.put(key.toString(), luaValue.checklong());
-            } else if (luaValue.isnumber()) {
-                data.put(key.toString(), luaValue.checkdouble());
-            } else if (luaValue.isnil()) {
-                data.put(key.toString(), LuaValue.NIL);
-            } else {
-                data.put(key.toString(), luaValue.toString());
-            }
-        }
+        if (key instanceof Long)
+            return LuaValue.valueOf((Long) key);
 
-        return data;
+        if (key instanceof Short)
+            return LuaValue.valueOf(((Short) key).intValue());
+
+        if (key instanceof Byte)
+            return LuaValue.valueOf(((Byte) key).intValue());
+
+        if (key instanceof Boolean)
+            return LuaValue.valueOf((Boolean) key);
+
+        if (key instanceof Character)
+            return LuaValue.valueOf(key.toString());
+
+        if (key instanceof Enum<?>)
+            return LuaValue.valueOf(((Enum<?>) key).name());
+
+        return LuaValue.valueOf(key.toString());
     }
 
     // +
@@ -172,8 +245,8 @@ public class LuaTypeConverter {
             LuaValue arg = args.arg(i);
 
             if (arg.istable()) {
-                Map<String, Object> stringObjectMap = LuaTypeConverter.toMap(arg.checktable());
-                strings[i - 1] = JSON.toJSONString(stringObjectMap, true);
+                Object object = LuaTypeConverter.toObject(arg.checktable());
+                strings[i - 1] = JSON.toJSONString(object, true);
             } else {
                 strings[i - 1] = arg.toString();
             }
