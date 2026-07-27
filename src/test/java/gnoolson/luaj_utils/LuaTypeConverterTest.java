@@ -1,10 +1,11 @@
 package gnoolson.luaj_utils;
 
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
+import org.luaj.vm2.*;
 
 import java.util.*;
 
@@ -89,7 +90,7 @@ class LuaTypeConverterTest {
         Assertions.assertEquals(3.14, map.get("key_4"));
         Assertions.assertEquals(Long.MAX_VALUE, map.get("key_5"));
         Assertions.assertEquals(null, map.get("key_6"));
-        Assertions.assertEquals( new ArrayList<Integer>(){{
+        Assertions.assertEquals(new ArrayList<Integer>() {{
             add(1122);
             add(3344);
         }}, map.get("key_7"));
@@ -112,6 +113,46 @@ class LuaTypeConverterTest {
         Assertions.assertEquals("1122", strings[1]);
         Assertions.assertEquals("3.14", strings[2]);
         Assertions.assertEquals("true", strings[3]);
+    }
+
+    @Test
+    public void toLuaValue() {
+        Assertions.assertEquals(LuaValue.valueOf("str"), LuaTypeConverter.toLuaValue("str"));
+        Assertions.assertEquals(LuaValue.valueOf(12345), LuaTypeConverter.toLuaValue(12345));
+        Assertions.assertEquals(LuaValue.valueOf(3.14), LuaTypeConverter.toLuaValue(3.14));
+
+        @ToString
+        @EqualsAndHashCode
+        @RequiredArgsConstructor
+        class VO {
+            final UUID value;
+        }
+
+        Assertions.assertEquals(LuaValue.valueOf("VO(value=375d04bf-f356-47bf-9348-2ae8a1a39e54)"),LuaTypeConverter.toLuaValue(new VO(UUID.fromString("375d04bf-f356-47bf-9348-2ae8a1a39e54"))));
+        Assertions.assertEquals(LuaValue.valueOf(true), LuaTypeConverter.toLuaValue(true));
+        Assertions.assertEquals(LuaValue.NIL, LuaTypeConverter.toLuaValue(null));
+
+        {
+            LuaTable expected = new LuaTable();
+            expected.set(1, LuaInteger.valueOf("str"));
+            expected.set(2, LuaDouble.valueOf(999));
+            expected.set(3, LuaString.valueOf(3.14));
+            LuaValue actual = LuaTypeConverter.toLuaValue(Arrays.asList("str", 999, 3.14));
+            Assertions.assertTrue(LuaTableUtils.deepEquals(expected, (LuaTable) actual));
+        }
+
+        {
+            LuaTable expected = new LuaTable();
+            expected.set("key1", LuaInteger.valueOf("str"));
+            expected.set("key2", LuaDouble.valueOf(999));
+            expected.set("key3", LuaString.valueOf(3.14));
+            LuaValue actual = LuaTypeConverter.toLuaValue(new HashMap<String, Object>() {{
+                put("key1", "str");
+                put("key2", 999);
+                put("key3", 3.14);
+            }});
+            Assertions.assertTrue(LuaTableUtils.deepEquals(expected, (LuaTable) actual));
+        }
     }
 
 }

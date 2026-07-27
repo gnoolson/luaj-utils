@@ -113,22 +113,22 @@ public class LuaTypeConverter {
 
     // +
     public static LuaValue toLuaValue(Object value) {
-        if (value == null) {
+        if (value == null) { // +
             return LuaValue.NIL;
-        } else if (value instanceof Boolean) {
+        } else if (value instanceof Boolean) { // +
             return LuaValue.valueOf((Boolean) value);
-        } else if (value instanceof Integer) {
+        } else if (value instanceof Integer) { // +
             return LuaInteger.valueOf((Integer) value);
-        } else if (value instanceof Number) {
+        } else if (value instanceof Number) { // +
             return LuaValue.valueOf(((Number) value).doubleValue());
-        } else if (value instanceof String) {
+        } else if (value instanceof String) { // +
             return LuaValue.valueOf((String) value);
-        } else if (value instanceof Map) {
+        } else if (value instanceof Map) { // +
             return toLuaTable((Map) value);
-        } else if (value instanceof Collection) {
+        } else if (value instanceof Collection) { // +
             return toLuaTable((Collection) value);
-        } else {
-            throw new IllegalArgumentException(String.format("\"%s\" is not supported", value.getClass().getCanonicalName()));
+        } else { // +
+            return LuaInteger.valueOf(value.toString());
         }
     }
 
