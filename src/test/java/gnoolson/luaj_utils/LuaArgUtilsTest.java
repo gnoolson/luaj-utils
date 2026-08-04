@@ -3,6 +3,7 @@ package gnoolson.luaj_utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.luaj.vm2.*;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,45 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LuaArgUtilsTest {
+
+    @Test
+    void getLuaFunctionFromLuaTable(){
+        { // ok
+            LuaTable sourceTable = new LuaTable();
+
+            ZeroArgFunction field1 = new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return null;
+                }
+            };
+
+            sourceTable.set("field1", field1);
+
+            LuaFunction actualValue = LuaArgUtils.getLuaFunctionFromLuaTable(sourceTable, "sourceTable", "field1");
+            Assertions.assertEquals(field1, actualValue);
+        }
+
+        {// field is nil
+            LuaTable sourceTable = new LuaTable();
+            RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+                LuaArgUtils.getLuaFunctionFromLuaTable(sourceTable, "sourceTable", "field1");
+            });
+
+            Assertions.assertEquals("Field \"field1\" was not found in LuaTable \"sourceTable\"", runtimeException.getMessage());
+        }
+
+        { // fail
+            LuaTable sourceTable = new LuaTable();
+            sourceTable.set("field1", new LuaUserdata(new byte[0]));
+
+            RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+                LuaArgUtils.getLuaFunctionFromLuaTable(sourceTable, "sourceTable", "field1");
+            });
+
+            Assertions.assertEquals("Field \"field1\" in LuaTable \"sourceTable\" is \"userdata\", expected 'function'", runtimeException.getMessage());
+        }
+    }
 
     @Test
     void getLuaTableFromLuaTable() {
@@ -324,6 +364,38 @@ class LuaArgUtilsTest {
                 LuaArgUtils.getStringFromFunctionArgs(arg, 1, "name1");
             });
             Assertions.assertEquals("Argument \"name1\" (1) is \"userdata\", expected 'string'", runtimeException.getMessage());
+        }
+    }
+
+
+    @Test
+    void getFunctionFromFunctionArgs(){
+        { // ok
+            LuaFunction function = new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return null;
+                }
+            };
+
+            LuaFunction actualResult = LuaArgUtils.getFunctionFromFunctionArgs(function, 1, "function1");
+            Assertions.assertEquals(function, actualResult);
+        }
+
+        { // arg is nil
+            LuaValue arg = LuaValue.NIL;
+            RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+                LuaArgUtils.getFunctionFromFunctionArgs(arg, 1, "function1");
+            });
+            Assertions.assertEquals("Argument \"function1\" (1) cannot be nil", runtimeException.getMessage());
+        }
+
+        { // wrong type
+            LuaValue arg = new LuaUserdata(new byte[]{0x12, 0x12, 0x12});
+            RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+                LuaArgUtils.getFunctionFromFunctionArgs(arg, 1, "function1");
+            });
+            Assertions.assertEquals("Argument \"function1\" (1) is \"userdata\", expected 'function'", runtimeException.getMessage());
         }
     }
 

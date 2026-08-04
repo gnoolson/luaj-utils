@@ -1,5 +1,6 @@
 package gnoolson.luaj_utils;
 
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -16,6 +17,13 @@ public class LuaArgUtils {
         LuaValue luaValue = luaTable.get(fieldName);
         checkNotNil(luaValue, tableName, fieldName);
         return checkTable(luaValue, tableName, fieldName);
+    }
+
+    // +
+    public static LuaFunction getLuaFunctionFromLuaTable(LuaTable luaTable, String tableName, String fieldName) {
+        LuaValue luaValue = luaTable.get(fieldName);
+        checkNotNil(luaValue, tableName, fieldName);
+        return checkFunction(luaValue, tableName, fieldName);
     }
 
     // +
@@ -89,6 +97,12 @@ public class LuaArgUtils {
     public static boolean getBooleanFromFunctionArgs(LuaValue luaValue, int argNumber, String argName) {
         checkNotNil(luaValue, argNumber, argName);
         return checkBoolean(luaValue, argNumber, argName);
+    }
+
+    // +
+    public static LuaFunction getFunctionFromFunctionArgs(LuaValue luaValue, int argNumber, String argName) {
+        checkNotNil(luaValue, argNumber, argName);
+        return checkFunction(luaValue, argNumber, argName);
     }
 
     // +
@@ -251,6 +265,14 @@ public class LuaArgUtils {
     }
 
     // +
+    public static LuaFunction checkFunction(LuaValue luaValue, String tableName, String fieldName) {
+        if (luaValue.isfunction())
+            return luaValue.checkfunction();
+
+        throw new IllegalArgumentException(String.format("Field \"%s\" in LuaTable \"%s\" is \"%s\", expected 'function'", fieldName, tableName, luaValue.typename())); // +
+    }
+
+    // +
     public static int checkInt(LuaValue luaValue, String tableName, String argName) {
         if (luaValue.isint())
             return luaValue.checkint();
@@ -338,6 +360,14 @@ public class LuaArgUtils {
             return luaValue.checkboolean();
 
         throw new IllegalArgumentException(String.format("Argument \"%s\" (%d) is \"%s\", expected 'boolean'", argName, argNumber, luaValue.typename())); // +
+    }
+
+    // +
+    public static LuaFunction checkFunction(LuaValue luaValue, int argNumber, String argName) {
+        if (luaValue.isfunction())
+            return luaValue.checkfunction();
+
+        throw new IllegalArgumentException(String.format("Argument \"%s\" (%d) is \"%s\", expected 'function'", argName, argNumber, luaValue.typename())); // +
     }
 
     // +
