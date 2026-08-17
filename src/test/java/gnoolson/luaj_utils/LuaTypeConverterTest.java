@@ -46,7 +46,6 @@ class LuaTypeConverterTest {
         Assertions.assertEquals(LuaValue.valueOf("str"), LuaTypeConverter.toLua("str"));
         Assertions.assertEquals(LuaValue.valueOf(12345), LuaTypeConverter.toLua(12345));
         Assertions.assertEquals(LuaValue.valueOf(3.14), LuaTypeConverter.toLua(3.14));
-
         Assertions.assertEquals(LuaValue.valueOf(true), LuaTypeConverter.toLua(true));
         Assertions.assertEquals(LuaValue.NIL, LuaTypeConverter.toLua(null));
 
@@ -68,6 +67,24 @@ class LuaTypeConverterTest {
                 put("key1", "str");
                 put("key2", 999);
                 put("key3", 3.14);
+            }});
+            Assertions.assertTrue(LuaTableUtils.deepEquals(expected, (LuaTable) actual));
+        }
+
+        {
+            LuaTable expected = new LuaTable();
+            expected.set(1, LuaValue.valueOf("string_1"));
+            expected.set(2, LuaValue.valueOf("string_2"));
+            expected.set(3, LuaValue.valueOf("string_3"));
+            expected.set(4, LuaValue.valueOf("string_4"));
+            expected.set(5, LuaValue.valueOf("string_5"));
+
+            LuaValue actual = LuaTypeConverter.toLua(new ArrayList<String>() {{
+                add("string_1");
+                add("string_2");
+                add("string_3");
+                add("string_4");
+                add("string_5");
             }});
             Assertions.assertTrue(LuaTableUtils.deepEquals(expected, (LuaTable) actual));
         }
@@ -107,7 +124,7 @@ class LuaTypeConverterTest {
                         "str",
                         "111",
                         "3.14",
-                        "{\n\t\"str\":\"STR\",\n\t\"i\":111,\n\t\"d\":3.14\n}"
+                        "{\n  \"i\" : 111,\n  \"str\" : \"STR\",\n  \"d\" : 3.14\n}"
                 },
                 strings
         );

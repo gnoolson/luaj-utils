@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class LuaArgUtilsTest {
 
     @Test
-    void getLuaFunctionFromLuaTable(){
+    void getLuaFunctionFromLuaTable() {
         { // ok
             LuaTable sourceTable = new LuaTable();
 
@@ -369,7 +369,7 @@ class LuaArgUtilsTest {
 
 
     @Test
-    void getFunctionFromFunctionArgs(){
+    void getFunctionFromFunctionArgs() {
         { // ok
             LuaFunction function = new ZeroArgFunction() {
                 @Override

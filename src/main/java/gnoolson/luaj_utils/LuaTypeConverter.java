@@ -1,8 +1,10 @@
 package gnoolson.luaj_utils;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -13,6 +15,8 @@ import java.math.BigInteger;
 import java.util.*;
 
 public class LuaTypeConverter {
+
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public static Object toObject(LuaValue value) {
         if (value == null || value.isnil())
@@ -97,13 +101,19 @@ public class LuaTypeConverter {
         if (object.getClass().isArray())
             return arrayToLua(object);
 
-        Object json = JSON.toJSON(object);
+        JsonNode jsonNode = JSON_MAPPER.convertValue(object, JsonNode.class);
 
-        if (json instanceof JSONObject)
-            return mapToLua((JSONObject) json);
+        if (jsonNode instanceof ObjectNode) {
+            Map<String, Object> map = JSON_MAPPER.convertValue(jsonNode, new TypeReference<Map<String, Object>>() {
+            });
+            return mapToLua(map);
+        }
 
-        if (json instanceof JSONArray)
-            return collectionToLua((JSONArray) json);
+        if (jsonNode instanceof ArrayNode) {
+            Collection<?> collection = JSON_MAPPER.convertValue(jsonNode, new TypeReference<Collection<?>>() {
+            });
+            return collectionToLua(collection);
+        }
 
         return LuaValue.userdataOf(object);
     }
@@ -240,19 +250,23 @@ public class LuaTypeConverter {
             args = args.subargs(startFrom);
         }
 
-        String[] strings = new String[args.narg()];
-        for (int i = 1; i <= args.narg(); i++) {
-            LuaValue arg = args.arg(i);
+        try {
+            String[] strings = new String[args.narg()];
+            for (int i = 1; i <= args.narg(); i++) {
+                LuaValue arg = args.arg(i);
 
-            if (arg.istable()) {
-                Object object = LuaTypeConverter.toObject(arg.checktable());
-                strings[i - 1] = JSON.toJSONString(object, true);
-            } else {
-                strings[i - 1] = arg.toString();
+                if (arg.istable()) {
+                    Object object = LuaTypeConverter.toObject(arg.checktable());
+                    strings[i - 1] = JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+                } else {
+                    strings[i - 1] = arg.toString();
+                }
             }
-        }
 
-        return strings;
+            return strings;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

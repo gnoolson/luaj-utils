@@ -14,7 +14,7 @@
         <dependency>
             <groupId>com.github.gnoolson</groupId>
             <artifactId>luaj-utils</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.1</version>
         </dependency>
     </dependencies>
 ```
