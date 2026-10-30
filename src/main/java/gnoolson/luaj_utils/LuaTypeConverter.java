@@ -16,6 +16,8 @@ import java.util.*;
 
 public class LuaTypeConverter {
 
+    public static final String JAVA_NULL_KEY = "__java_null_key__";
+    public static final LuaValue LUA_VALUE_JAVA_NULL_KEY = LuaValue.valueOf(JAVA_NULL_KEY);
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public static Object toObject(LuaValue value) {
@@ -123,7 +125,7 @@ public class LuaTypeConverter {
      *
      * */
     private static Object tableToJava(LuaTable luaTable) {
-        if (isArray(luaTable))
+        if (LuaTableUtils.isArray(luaTable))
             return tableToList(luaTable);
 
         return tableToMap(luaTable);
@@ -156,31 +158,6 @@ public class LuaTypeConverter {
         return map;
     }
 
-    private static boolean isArray(LuaTable luaTable) {
-        int len = luaTable.length();
-        int count = 0;
-        LuaValue key = LuaValue.NIL;
-
-        while (true) {
-            Varargs next = luaTable.next(key);
-            key = next.arg1();
-
-            if (key.isnil())
-                break;
-
-            if (!key.isint())
-                return false;
-
-            int index = key.toint();
-
-            if (index < 1 || index > len)
-                return false;
-
-            count++;
-        }
-
-        return count == len;
-    }
 
     private static LuaTable mapToLua(Map<?, ?> map) {
         LuaTable luaTable = new LuaTable();
@@ -215,7 +192,7 @@ public class LuaTypeConverter {
 
     private static LuaValue toLuaKey(Object key) {
         if (key == null)
-            throw new IllegalArgumentException("Map key cannot be null");
+            return LUA_VALUE_JAVA_NULL_KEY;
 
         if (key instanceof String)
             return LuaValue.valueOf((String) key);

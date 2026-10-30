@@ -130,6 +130,28 @@ class LuaTypeConverterTest {
         );
     }
 
+    @Test
+    public void map_to_table(){
+        Map<String, Object> map = new HashMap<>();
+        map.put(null, 3.14);
+        map.put("key_1", "string_value");
+        map.put("key_2", 2);
+        map.put("key_3", new ArrayList(){{add(1); add(2); add(3); }});
+
+        LuaValue table = LuaTypeConverter.toLua(map);
+
+        Assertions.assertEquals(LuaValue.valueOf(3.14), table.get(LuaTypeConverter.LUA_VALUE_JAVA_NULL_KEY));
+        Assertions.assertEquals(LuaValue.valueOf(3.14), table.get(LuaValue.valueOf("__java_null_key__")));
+        Assertions.assertEquals(LuaValue.valueOf("string_value"), table.get("key_1"));
+        Assertions.assertEquals(LuaValue.valueOf(2), table.get("key_2"));
+
+        LuaTable list = new LuaTable(){{
+            set(1, LuaValue.valueOf(1));
+            set(2, LuaValue.valueOf(2));
+            set(3, LuaValue.valueOf(3));
+        }};
+        Assertions.assertTrue(LuaTableUtils.deepEquals(list, (LuaTable) table.get("key_3")));
+    }
 
     /*
      *

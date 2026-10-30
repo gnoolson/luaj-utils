@@ -14,6 +14,10 @@ public class LuaTableUtils {
         }
     }
 
+    public static boolean isEmpty(LuaTable table){
+        return table.next(LuaValue.NIL).arg1().isnil();
+    }
+
     // +
     public static void clear(LuaTable luaTable) {
         LuaValue k = LuaValue.NIL;
@@ -63,6 +67,31 @@ public class LuaTableUtils {
         return true;
     }
 
+    public static boolean isArray(LuaTable luaTable) {
+        int len = luaTable.length();
+        int count = 0;
+        LuaValue key = LuaValue.NIL;
+
+        while (true) {
+            Varargs next = luaTable.next(key);
+            key = next.arg1();
+
+            if (key.isnil())
+                break;
+
+            if (!key.isint())
+                return false;
+
+            int index = key.toint();
+
+            if (index < 1 || index > len)
+                return false;
+
+            count++;
+        }
+
+        return count == len;
+    }
     /*
      *
      *

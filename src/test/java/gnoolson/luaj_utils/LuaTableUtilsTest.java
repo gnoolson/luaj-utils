@@ -62,4 +62,28 @@ class LuaTableUtilsTest {
         );
     }
 
+    @Test
+    public void is_empty() {
+        LuaTable table = new LuaTable();
+        Assertions.assertTrue(LuaTableUtils.isEmpty(table));
+
+        table.set("key", "value");
+        Assertions.assertFalse(LuaTableUtils.isEmpty(table));
+
+        table.set("key", LuaValue.NIL);
+        Assertions.assertTrue(LuaTableUtils.isEmpty(table));
+    }
+
+    @Test
+    public void is_array(){
+        LuaTable table = new LuaTable();
+        Assertions.assertTrue(LuaTableUtils.isArray(table));
+
+        table.set(1, LuaValue.valueOf("VALUE"));
+        Assertions.assertTrue(LuaTableUtils.isArray(table));
+
+        table.set("key", "VALUE");
+        Assertions.assertFalse(LuaTableUtils.isArray(table));
+    }
+
 }
